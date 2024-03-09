@@ -1,25 +1,36 @@
 package org.example;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
-
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Scanner;
+import java.io.InputStream;
+
+import static org.mockito.Mockito.*;
 
 class VillageInputTest {
 
     private DatabaseConnection databaseConnection;
+    private Village village;
     private VillageInput villageInput;
+    private final InputStream originalSystemIn = System.in;
+    private ByteArrayInputStream testIn;
 
     @BeforeEach
     void setUp() {
         databaseConnection = mock(DatabaseConnection.class);
-        Village village = mock(Village.class);
+        village = mock(Village.class);
 
-        villageInput = new VillageInput(village, databaseConnection);
+        // No need to replace System.in anymore, so these parts are removed
+    }
+
+    @AfterEach
+    void restoreSystemIn() {
+        // Restore original System.in after each test
+        System.setIn(originalSystemIn);
     }
 
     @Test
@@ -30,10 +41,13 @@ class VillageInputTest {
         when(databaseConnection.GetTownNames()).thenReturn(villages);
         when(databaseConnection.SaveVillage(any(Village.class), anyString())).thenReturn(true);
 
-        // Set up input
+        // Simulate input
         String input = "new_village\ny\n";
-        InputStream in = new ByteArrayInputStream(input.getBytes());
-        System.setIn(in);
+        testIn = new ByteArrayInputStream(input.getBytes());
+        Scanner scanner = new Scanner(testIn);
+
+        // Inject the mock Scanner
+        villageInput = new VillageInput(village, databaseConnection, scanner);
 
         // Call method
         villageInput.Save();
@@ -51,10 +65,13 @@ class VillageInputTest {
         when(databaseConnection.GetTownNames()).thenReturn(villages);
         when(databaseConnection.LoadVillage(anyString())).thenReturn(new Village());
 
-        // Set up input
+        // Simulate input
         String input = "existing_village\n";
-        InputStream in = new ByteArrayInputStream(input.getBytes());
-        System.setIn(in);
+        testIn = new ByteArrayInputStream(input.getBytes());
+        Scanner scanner = new Scanner(testIn);
+
+        // Inject the mock Scanner
+        villageInput = new VillageInput(village, databaseConnection, scanner);
 
         // Call method
         villageInput.Load();

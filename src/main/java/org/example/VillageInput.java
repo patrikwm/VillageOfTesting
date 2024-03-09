@@ -8,25 +8,33 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 public class VillageInput {
-    DatabaseConnection databaseConnection = new DatabaseConnection();
-    Village village = new Village();
-    Scanner scanner = new Scanner(System.in);
+    private DatabaseConnection databaseConnection;
+    private Village village;
+    private Scanner scanner; // Allow injecting a custom Scanner instance
     private final HashMap<String, IAction> actions = new HashMap<>();
-    ArrayList<String> options = new ArrayList<>();
+    private ArrayList<String> options = new ArrayList<>();
 
-
-    public VillageInput(Village village, DatabaseConnection databaseConnection) {
-        this();
+    // Constructor that allows injection of Village, DatabaseConnection, and Scanner
+    public VillageInput(Village village, DatabaseConnection databaseConnection, Scanner scanner) {
         this.village = village;
         this.databaseConnection = databaseConnection;
+        this.scanner = scanner;
+        initialize();
     }
+
+    // Default constructor for normal use, uses System.in for Scanner
     public VillageInput() {
-        actions.put("1", () -> AddWorker());
-        actions.put("2", () -> AddProject());
-        actions.put("3", () -> village.Day());
-        actions.put("4", () -> Load());
-        actions.put("5", () -> Save());
-        actions.put("6", () -> village.GameOver());
+        this(new Village(), new DatabaseConnection(), new Scanner(System.in));
+    }
+
+    // Initialization logic for actions and options
+    private void initialize() {
+        actions.put("1", this::AddWorker);
+        actions.put("2", this::AddProject);
+        actions.put("3", village::Day);
+        actions.put("4", this::Load);
+        actions.put("5", this::Save);
+        actions.put("6", village::GameOver);
 
         options.add("1: Add Worker.");
         options.add("2: Add Project.");
